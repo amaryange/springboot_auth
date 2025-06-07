@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   pgsql:
     container_name: pgdb
@@ -17,7 +19,7 @@ services:
       - '5434:5434'
   auth-service:
     container_name: auth-service
-    build: .
+    build: harbor.amarycode.dev/auth_springboot/backend:latest
     ports:
       - '8090:8090'
     environment:
