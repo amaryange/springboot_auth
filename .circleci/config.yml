@@ -44,6 +44,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
+      - checkout # ← Cloner le repo Git
       - add_ssh_keys:
           fingerprints:
             - "SHA256:IwgtHfTgjh4I4oXQnUpuBhXvCXb67ZMUk0zmbUHDb94"
@@ -63,9 +64,7 @@ jobs:
             echo 'docker compose -f docker-compose.yml pull' >> deploy.sh
             echo 'docker compose -f docker-compose.yml up -d --build --force-recreate' >> deploy.sh
             echo 'docker image prune -a -f --filter "until=24h"' >> deploy.sh
-  
-            # Envoyer le script sur le serveur
+
+            # Envoyer et exécuter le script
             scp -o StrictHostKeyChecking=no deploy.sh $SSH_USER@$SSH_HOST:/tmp/deploy.sh
-  
-            # Exécuter le script
             ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "chmod +x /tmp/deploy.sh && /tmp/deploy.sh && rm /tmp/deploy.sh"
