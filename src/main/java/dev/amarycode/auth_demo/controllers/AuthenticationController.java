@@ -33,5 +33,10 @@ public class AuthenticationController {
         return ResponseEntity.ok(service.authenticate(request));
     }
 
+    @GetMapping
+    public ResponseEntity<String> get() {
+        return ResponseEntity.ok("Hello from secured endpoint");
+    }
+
 
 }
