@@ -1,2 +1,5 @@
-package dev.amarycode.auth_demo.enums;public enum TokenType {
+package dev.amarycode.auth_demo.enums;
+
+public enum TokenType {
+    BEARER
 }

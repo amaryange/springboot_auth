@@ -1,0 +1,71 @@
+version: 2.1
+
+workflows:
+  ci-cd-pipeline:
+    jobs:
+      - build-and-push:
+          context:
+            - test  # Spécifiez le context ici
+          filters:
+            branches:
+              only: main
+      - deploy:
+          context:
+            - test  # Spécifiez le context ici
+          requires:
+            - build-and-push
+          filters:
+            branches:
+              only: main
+
+jobs:
+  build-and-push:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.24  # Utiliser une version plus récente
+      - run:
+          name: Build and Push Docker image
+          command: |
+            # Build Docker image
+            docker build -t $HARBOR_URL/auth_springboot/backend:$CIRCLE_SHA1 .
+            docker tag $HARBOR_URL/auth_springboot/backend:$CIRCLE_SHA1 $HARBOR_URL/auth_springboot/backend:latest
+
+            # Login to Harbor
+            echo "$HARBOR_PASSWORD" | docker login $HARBOR_URL -u $HARBOR_USERNAME --password-stdin
+
+            # Push Docker image to Harbor
+            docker push $HARBOR_URL/auth_springboot/backend:$CIRCLE_SHA1
+            docker push $HARBOR_URL/auth_springboot/backend:latest
+
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:90L7RxlJraxJkSr/Ww7k7Zh+En8o+kwkzV6oQctlxyA"
+      - run:
+          name: Deploy to server
+          command: |
+            # Créer le script en écrivant ligne par ligne
+            echo '#!/bin/bash' > deploy.sh
+            echo 'HARBOR_URL="'"$HARBOR_URL"'"' >> deploy.sh
+            echo 'HARBOR_USERNAME="'"$HARBOR_USERNAME"'"' >> deploy.sh
+            echo 'HARBOR_PASSWORD="'"$HARBOR_PASSWORD"'"' >> deploy.sh
+            echo 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_URL -u $HARBOR_USERNAME --password-stdin' >> deploy.sh
+            echo 'docker pull $HARBOR_URL/auth_springboot/backend:latest' >> deploy.sh
+            echo 'if [ "$(docker ps -aq -f name=auth-service)" ]; then' >> deploy.sh
+            echo '  docker stop auth-service' >> deploy.sh
+            echo '  docker rm auth-service' >> deploy.sh
+            echo 'fi' >> deploy.sh
+            echo 'docker run -d --name auth-service -p 8090:8090 --restart unless-stopped $HARBOR_URL/auth_springboot/backend:latest' >> deploy.sh
+            echo 'docker image prune -a -f --filter "until=24h"' >> deploy.sh
+
+            # Envoyer le script au serveur
+            scp -o StrictHostKeyChecking=no deploy.sh $SSH_USER@$SSH_HOST:/tmp/deploy.sh
+
+            # Exécuter le script
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "chmod +x /tmp/deploy.sh && /tmp/deploy.sh && rm /tmp/deploy.sh"

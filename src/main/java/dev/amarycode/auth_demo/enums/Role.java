@@ -1,2 +1,6 @@
-package dev.amarycode.auth_demo;public enum Role {
+package dev.amarycode.auth_demo.enums;
+
+public enum Role {
+    USER,
+    ADMIN
 }

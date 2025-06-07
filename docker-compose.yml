@@ -1,0 +1,33 @@
+services:
+  pgsql:
+    container_name: pgdb
+    image: postgres:16
+    environment:
+      - 'POSTGRES_DB=test'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+    networks:
+      - test-net
+    labels:
+      - "org.springframework.boot.service-connection=postgres"
+    volumes:
+      - test_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - '5434:5434'
+  auth-service:
+    container_name: auth-service
+    build: .
+    ports:
+      - '8090:8090'
+    environment:
+      - DB_URL=jdbc:postgresql://pgdb:5434/test
+    depends_on:
+      - pgsql
+    networks:
+      - test-net
+networks:
+  test-net:
+    driver: bridge
+volumes:
+  test_data:
