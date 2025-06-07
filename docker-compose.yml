@@ -16,14 +16,14 @@ services:
       - test_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
     ports:
-      - '5434:5434'
+      - '5434:5432'
   auth-service:
     container_name: auth-service
     build: harbor.amarycode.dev/auth_springboot/backend:latest
     ports:
       - '8090:8090'
     environment:
-      - DB_URL=jdbc:postgresql://pgdb:5434/test
+      - DB_URL=jdbc:postgresql://pgdb:5432/test
     depends_on:
       - pgsql
     networks:
