@@ -19,7 +19,7 @@ services:
       - '5434:5432'
   auth-service:
     container_name: auth-service
-    build: harbor.amarycode.dev/auth_springboot/backend:latest
+    image: harbor.amarycode.dev/auth_springboot/backend:latest
     ports:
       - '8090:8090'
     environment:
