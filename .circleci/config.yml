@@ -50,18 +50,22 @@ jobs:
       - run:
           name: Deploy to server
           command: |
-            # Créer le script en écrivant ligne par ligne
+            # Copier docker-compose.yml vers le serveur distant
+            scp -o StrictHostKeyChecking=no docker-compose.yml $SSH_USER@$SSH_HOST:/tmp/docker-compose.yml
+
+            # Créer le script de déploiement
             echo '#!/bin/bash' > deploy.sh
             echo "HARBOR_URL=$HARBOR_URL" >> deploy.sh
             echo "HARBOR_USERNAME=$HARBOR_USERNAME" >> deploy.sh
             echo "HARBOR_PASSWORD=$HARBOR_PASSWORD" >> deploy.sh
+            echo 'cd /tmp' >> deploy.sh
             echo 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_URL -u $HARBOR_USERNAME --password-stdin' >> deploy.sh
             echo 'docker compose -f docker-compose.yml pull' >> deploy.sh
             echo 'docker compose -f docker-compose.yml up -d --build --force-recreate' >> deploy.sh
             echo 'docker image prune -a -f --filter "until=24h"' >> deploy.sh
-
-            # Envoyer le script au serveur
+  
+            # Envoyer le script sur le serveur
             scp -o StrictHostKeyChecking=no deploy.sh $SSH_USER@$SSH_HOST:/tmp/deploy.sh
-
+  
             # Exécuter le script
             ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "chmod +x /tmp/deploy.sh && /tmp/deploy.sh && rm /tmp/deploy.sh"
