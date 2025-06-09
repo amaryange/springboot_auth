@@ -11,6 +11,9 @@ import dev.amarycode.auth_demo.responses.AuthenticationResponse;
 import dev.amarycode.auth_demo.responses.UserResponse;
 import dev.amarycode.auth_demo.services.AuthenticationService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -34,8 +37,10 @@ public class AuthenticationController {
     }
 
     @GetMapping
-    public ResponseEntity<String> get() {
-        return ResponseEntity.ok("Hello from secured endpoint");
+    public ResponseEntity<Map<String, String>> get() {
+        Map<String, String> map = new HashMap<>();
+        map.put("message", "Hello from public endpoint");
+        return ResponseEntity.ok(map);
     }
 
 
